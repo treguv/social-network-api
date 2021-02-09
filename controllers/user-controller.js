@@ -5,6 +5,11 @@ const userController = {
   getAllUsers(req, res) {
     //these still get req and res
     User.find({})
+      .populate({
+        path: "thoughts",
+        select: "-__v",
+      })
+      .select("-__v")
       .then((dbUserData) => res.json(dbUserData))
       .catch((err) => {
         console.log(err);
@@ -13,6 +18,11 @@ const userController = {
   },
   getUserById({ params }, res) {
     User.findOne({ _id: params.id })
+      .populate({
+        path: "thoughts",
+        select: "-__v",
+      })
+      .select("-__v")
       .then((dbUserData) => res.json(dbUserData))
       .catch((err) => {
         console.log(err);
@@ -43,6 +53,37 @@ const userController = {
     User.findOneAndDelete({ _id: params.id })
       .then((dbUserData) => res.json(dbUserData))
       .catch((err) => res.json(err));
+  },
+  //Add a friend
+  addFriend(req, res) {
+    User.findOne({ _id: req.params.friendId })
+      .then((userObj) => {
+        return User.findOneAndUpdate(
+          { _id: req.params.id },
+          { $push: { friends: userObj } },
+          { new: true, runValidators: true }
+        );
+      })
+      .then((dbUserData) => res.json(dbUserData))
+      .catch((err) => {
+        console.log(err);
+        res.sendStatus(400);
+      });
+  },
+  deleteFriend(req, res) {
+    User.findOne({ _id: req.params.friendId })
+      .then((userObj) => {
+        return User.findOneAndUpdate(
+          { _id: req.params.id },
+          { $pull: { friends: userObj } },
+          { new: true, runValidators: true }
+        );
+      })
+      .then((dbUserData) => res.json(dbUserData))
+      .catch((err) => {
+        console.log(err);
+        res.sendStatus(400);
+      });
   },
 };
 
